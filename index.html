@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laravel Multi-Role Auth Starter — Live Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#030f07;--surface:#071410;--surface2:#0d1f18;
+  --border:#1a3028;--accent:#00dc64;--accent2:#00ff7a;
+  --text:#e0efe6;--muted:#4a7060;
+  --admin:#60a5fa;--staff:#fbbf24;--client:#a78bfa;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 80% 20%,rgba(0,220,100,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 40% at 20% 80%,rgba(96,165,250,.04) 0%,transparent 60%);
+  pointer-events:none;z-index:0
+}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;height:68px;
+  background:rgba(3,15,7,.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border)
+}
+.nav-logo{font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:10px}
+.nav-logo .bracket{color:var(--accent)}
+.role-pills{display:flex;gap:8px}
+.role-pill{padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:700}
+.rp-admin{background:rgba(96,165,250,.15);color:var(--admin);border:1px solid rgba(96,165,250,.3)}
+.rp-staff{background:rgba(251,191,36,.15);color:var(--staff);border:1px solid rgba(251,191,36,.3)}
+.rp-client{background:rgba(167,139,250,.15);color:var(--client);border:1px solid rgba(167,139,250,.3)}
+.nav-right{display:flex;align-items:center;gap:20px}
+.nav-links{display:flex;gap:28px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.88rem;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-buy{
+  background:var(--accent);color:#000;
+  padding:9px 22px;border-radius:8px;
+  text-decoration:none;font-weight:700;font-size:.85rem;
+}
+
+/* HERO */
+.hero{
+  min-height:100vh;display:grid;grid-template-columns:1fr 1fr;
+  align-items:center;padding:120px 80px 80px;gap:60px;position:relative;z-index:1
+}
+@media(max-width:900px){.hero{grid-template-columns:1fr;}.hero-right{display:none}}
+.hero-label{
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:28px;
+  font-size:.78rem;font-weight:700;letter-spacing:.1em;color:var(--accent);
+  border:1px solid rgba(0,220,100,.3);padding:6px 16px;border-radius:20px
+}
+h1{font-size:clamp(2.4rem,4.5vw,3.8rem);font-weight:800;line-height:1.08;margin-bottom:24px}
+h1 .hl-admin{color:var(--admin)}
+h1 .hl-staff{color:var(--staff)}
+h1 .hl-client{color:var(--client)}
+.hero-sub{font-size:1rem;color:var(--muted);line-height:1.75;margin-bottom:36px;max-width:460px}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+.btn-primary{
+  background:var(--accent);color:#000;padding:13px 26px;
+  border-radius:8px;text-decoration:none;font-weight:700;font-size:.92rem;
+  box-shadow:0 0 30px rgba(0,220,100,.25);transition:all .2s
+}
+.btn-primary:hover{box-shadow:0 8px 40px rgba(0,220,100,.4);transform:translateY(-2px)}
+.btn-secondary{
+  border:1px solid var(--border);color:var(--text);padding:13px 26px;
+  border-radius:8px;text-decoration:none;font-weight:600;font-size:.92rem;transition:all .2s
+}
+.btn-secondary:hover{border-color:var(--accent);background:rgba(0,220,100,.05)}
+
+/* ROLE DASHBOARD MOCKUP */
+.dashboard-mockup{position:relative}
+.db-window{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  box-shadow:0 40px 80px rgba(0,0,0,.5)
+}
+.db-topbar{
+  background:var(--surface2);padding:10px 16px;
+  display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)
+}
+.dot{width:11px;height:11px;border-radius:50%}
+.dot-r{background:#ff5f57}.dot-y{background:#febc2e}.dot-g{background:#28c840}
+.db-url{
+  margin:0 auto;background:var(--bg);border:1px solid var(--border);
+  border-radius:4px;padding:3px 12px;font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;color:var(--muted)
+}
+.db-body{padding:20px}
+.db-nav{
+  display:flex;gap:6px;margin-bottom:16px;
+  background:var(--surface2);padding:6px;border-radius:8px
+}
+.db-nav-item{
+  padding:6px 14px;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;
+  transition:all .2s;color:var(--muted)
+}
+.db-nav-item.active-admin{background:rgba(96,165,250,.15);color:var(--admin)}
+.db-nav-item.active-staff{background:rgba(251,191,36,.15);color:var(--staff)}
+.db-nav-item.active-client{background:rgba(167,139,250,.15);color:var(--client)}
+.db-panel{display:none}
+.db-panel.active{display:block}
+.db-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.db-stat{
+  background:var(--surface2);border-radius:8px;padding:14px;
+  border:1px solid var(--border)
+}
+.db-stat-num{font-size:1.4rem;font-weight:800}
+.db-stat-label{font-size:.7rem;color:var(--muted);margin-top:2px}
+.db-table{width:100%;border-collapse:collapse;font-size:.75rem}
+.db-table th{
+  text-align:left;padding:8px;color:var(--muted);
+  border-bottom:1px solid var(--border);font-weight:600
+}
+.db-table td{padding:8px;border-bottom:1px solid rgba(26,48,40,.5)}
+.badge{padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700}
+.b-active{background:rgba(0,220,100,.15);color:var(--accent)}
+.b-pending{background:rgba(251,191,36,.15);color:var(--staff)}
+.b-admin{background:rgba(96,165,250,.15);color:var(--admin)}
+.b-staff{background:rgba(251,191,36,.15);color:var(--staff)}
+.b-client{background:rgba(167,139,250,.15);color:var(--client)}
+
+/* SECTIONS */
+section{padding:90px 80px;position:relative;z-index:1}
+.section-label{font-size:.73rem;font-weight:700;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+h2{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:800;margin-bottom:14px}
+h2 em{font-style:normal;color:var(--accent)}
+.section-sub{font-size:.95rem;color:var(--muted);max-width:540px;line-height:1.75;margin-bottom:56px}
+
+/* ROLE CARDS */
+.roles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:60px}
+@media(max-width:700px){.roles-grid{grid-template-columns:1fr}}
+.role-card{border-radius:14px;padding:32px;border:1px solid}
+.role-card.admin{border-color:rgba(96,165,250,.3);background:rgba(96,165,250,.04)}
+.role-card.staff{border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.04)}
+.role-card.client{border-color:rgba(167,139,250,.3);background:rgba(167,139,250,.04)}
+.role-card h3{font-size:1.1rem;font-weight:800;margin-bottom:6px}
+.role-card.admin h3{color:var(--admin)}
+.role-card.staff h3{color:var(--staff)}
+.role-card.client h3{color:var(--client)}
+.role-card .role-desc{font-size:.85rem;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.role-perms{display:flex;flex-direction:column;gap:8px}
+.perm{display:flex;align-items:center;gap:8px;font-size:.82rem}
+.perm::before{content:'✓';font-weight:700;font-size:.7rem}
+.role-card.admin .perm::before{color:var(--admin)}
+.role-card.staff .perm::before{color:var(--staff)}
+.role-card.client .perm::before{color:var(--client)}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.feature-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:26px;transition:border-color .3s,transform .3s
+}
+.feature-card:hover{border-color:var(--accent);transform:translateY(-3px)}
+.feature-icon{font-size:1.4rem;margin-bottom:14px}
+.feature-card h3{font-size:.98rem;font-weight:700;margin-bottom:8px}
+.feature-card p{font-size:.84rem;color:var(--muted);line-height:1.6}
+
+/* CODE TABS */
+.demo-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.demo-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2);overflow-x:auto}
+.demo-tab{
+  padding:13px 22px;font-size:.83rem;font-weight:600;cursor:pointer;
+  color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;
+  transition:all .2s;font-family:'Outfit',sans-serif
+}
+.demo-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.demo-panel{display:none;padding:28px}
+.demo-panel.active{display:block}
+.code-block{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:22px;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.9;overflow-x:auto
+}
+.c-comment{color:#4a7a4a}.c-keyword{color:#60a5fa}.c-class{color:#4ec9b0}
+.c-string{color:#ce9178}.c-fn{color:#dcdcaa}.c-var{color:#9cdcfe}.c-op{color:var(--text)}
+
+/* OTP FLOW */
+.otp-flow{display:flex;gap:0;margin-top:0}
+.otp-step{
+  flex:1;padding:20px;text-align:center;position:relative;
+  background:var(--surface2);border:1px solid var(--border)
+}
+.otp-step:first-child{border-radius:8px 0 0 8px}
+.otp-step:last-child{border-radius:0 8px 8px 0}
+.otp-step:not(:last-child)::after{
+  content:'→';position:absolute;right:-14px;top:50%;transform:translateY(-50%);
+  color:var(--accent);font-size:1.2rem;z-index:1
+}
+.otp-num{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(0,220,100,.15);border:1px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:var(--accent);margin:0 auto 10px;font-size:.9rem
+}
+.otp-step h4{font-size:.82rem;font-weight:700;margin-bottom:4px}
+.otp-step p{font-size:.73rem;color:var(--muted);line-height:1.5}
+.otp-endpoint{
+  font-family:'JetBrains Mono',monospace;font-size:.65rem;
+  color:var(--accent);background:rgba(0,220,100,.08);
+  padding:2px 8px;border-radius:4px;margin-top:6px;display:inline-block
+}
+
+/* FILE TREE */
+.file-tree{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:20px;
+  font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:2
+}
+.ft-dir{color:var(--accent)}.ft-file{color:var(--text)}.ft-comment{color:var(--muted);font-size:.72rem}
+
+/* CTA */
+.cta-section{
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  text-align:center;padding:90px 40px;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(0,220,100,.05) 0%,transparent 70%)
+}
+.price-tag{font-size:3.2rem;font-weight:800;color:var(--accent);margin:24px 0}
+.price-tag sup{font-size:1.4rem}.price-tag sub{font-size:.9rem;color:var(--muted)}
+
+footer{padding:36px 80px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span class="bracket">[</span>Auth<span class="bracket">]</span></div>
+  <div class="role-pills">
+    <span class="role-pill rp-admin">admin</span>
+    <span class="role-pill rp-staff">staff</span>
+    <span class="role-pill rp-client">client</span>
+  </div>
+  <div class="nav-right">
+    <div class="nav-links">
+      <a href="#roles">Roles</a>
+      <a href="#features">Features</a>
+      <a href="#code">Code</a>
+      <a href="#files">Files</a>
+    </div>
+    <a href="https://www.codester.com" class="nav-buy" target="_blank">Buy — $24</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-label">LARAVEL AUTH STARTER KIT</div>
+    <h1>
+      <span class="hl-admin">Admin.</span>
+      <span class="hl-staff"> Staff.</span>
+      <span class="hl-client"> Client.</span><br>
+      Production auth<br>in minutes.
+    </h1>
+    <p class="hero-sub">Three pre-built roles. OTP password reset. Force-change on first login. RoleMiddleware out of the box. Stop rebuilding auth from scratch.</p>
+    <div class="hero-actions">
+      <a href="#roles" class="btn-primary">Explore the roles →</a>
+      <a href="#code" class="btn-secondary">View the code</a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="dashboard-mockup">
+      <div class="db-window">
+        <div class="db-topbar">
+          <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+          <div class="db-url">https://yourapp.com/admin/dashboard</div>
+        </div>
+        <div class="db-body">
+          <div class="db-nav" id="dbNav">
+            <div class="db-nav-item active-admin" onclick="switchRole('admin')">Admin Panel</div>
+            <div class="db-nav-item" onclick="switchRole('staff')" style="color:var(--muted)">Staff View</div>
+            <div class="db-nav-item" onclick="switchRole('client')" style="color:var(--muted)">Client Portal</div>
+          </div>
+
+          <div class="db-panel active" id="panel-admin">
+            <div class="db-stat-row">
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--admin)">24</div><div class="db-stat-label">Total Users</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--accent)">8</div><div class="db-stat-label">Active Today</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--staff)">3</div><div class="db-stat-label">Pending</div></div>
+            </div>
+            <table class="db-table">
+              <tr><th>User</th><th>Role</th><th>Status</th></tr>
+              <tr><td>Maria Santos</td><td><span class="badge b-admin">admin</span></td><td><span class="badge b-active">active</span></td></tr>
+              <tr><td>Juan dela Cruz</td><td><span class="badge b-staff">staff</span></td><td><span class="badge b-active">active</span></td></tr>
+              <tr><td>Ana Reyes</td><td><span class="badge b-client">client</span></td><td><span class="badge b-pending">pending</span></td></tr>
+            </table>
+          </div>
+
+          <div class="db-panel" id="panel-staff">
+            <div class="db-stat-row">
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--staff)">12</div><div class="db-stat-label">My Tasks</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--accent)">9</div><div class="db-stat-label">Completed</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--client)">3</div><div class="db-stat-label">In Progress</div></div>
+            </div>
+            <table class="db-table">
+              <tr><th>Task</th><th>Client</th><th>Status</th></tr>
+              <tr><td>Process Request #42</td><td>Ana Reyes</td><td><span class="badge b-active">done</span></td></tr>
+              <tr><td>Review Document</td><td>Bob Cruz</td><td><span class="badge b-pending">in progress</span></td></tr>
+            </table>
+          </div>
+
+          <div class="db-panel" id="panel-client">
+            <div class="db-stat-row">
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--client)">3</div><div class="db-stat-label">My Requests</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--accent)">2</div><div class="db-stat-label">Completed</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--staff)">1</div><div class="db-stat-label">Pending</div></div>
+            </div>
+            <table class="db-table">
+              <tr><th>Request</th><th>Submitted</th><th>Status</th></tr>
+              <tr><td>Document Request</td><td>Jun 1, 2024</td><td><span class="badge b-active">complete</span></td></tr>
+              <tr><td>Certificate Copy</td><td>Jun 3, 2024</td><td><span class="badge b-pending">pending</span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROLES -->
+<section id="roles">
+  <div class="section-label">Role system</div>
+  <h2>Three roles, <em>isolated access</em></h2>
+  <p class="section-sub">Each role gets its own middleware guard, dashboard, and permission scope. Extend to more roles in minutes.</p>
+  <div class="roles-grid">
+    <div class="role-card admin">
+      <h3>Admin</h3>
+      <p class="role-desc">Full system access. Manages users, roles, settings, and has visibility across all data.</p>
+      <div class="role-perms">
+        <div class="perm">Manage all users & roles</div>
+        <div class="perm">Access all dashboards</div>
+        <div class="perm">System configuration</div>
+        <div class="perm">Seed via AdminUserSeeder</div>
+      </div>
+    </div>
+    <div class="role-card staff">
+      <h3>Staff</h3>
+      <p class="role-desc">Employee-level access. Extended StaffInfo profile with job title, department, emergency contact.</p>
+      <div class="role-perms">
+        <div class="perm">Process assigned tasks</div>
+        <div class="perm">Full StaffInfo profile</div>
+        <div class="perm">role:staff,admin routes</div>
+        <div class="perm">Employee ID & department</div>
+      </div>
+    </div>
+    <div class="role-card client">
+      <h3>Client</h3>
+      <p class="role-desc">Public-facing user. Submits requests, tracks status, limited to their own data only.</p>
+      <div class="role-perms">
+        <div class="perm">Submit & track requests</div>
+        <div class="perm">View own records only</div>
+        <div class="perm">role:client routes</div>
+        <div class="perm">Self-registration support</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="padding-top:0">
+  <div class="section-label">What's included</div>
+  <h2>Everything auth needs, <em>already built</em></h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h3>RoleMiddleware</h3>
+      <p><code>role:admin</code>, <code>role:staff,admin</code> — protect any route with any role combination.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <h3>OTP Password Reset</h3>
+      <p>Email OTP — no insecure link tokens that expire. 3-step flow: send → verify → reset.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔄</div>
+      <h3>Force Password Change</h3>
+      <p>Set <code>must_change_password=true</code> on any user. Middleware handles the redirect with infinite-loop protection.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👤</div>
+      <h3>StaffInfo Model</h3>
+      <p>Extended employee profile: employee ID, job title, employment status, gender, emergency contact, office location.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⏱️</div>
+      <h3>Auto-Timestamps</h3>
+      <p>Tracks <code>last_login_at</code> and <code>last_password_change_at</code> automatically on every auth event.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌱</div>
+      <h3>Admin Seeder</h3>
+      <p>One command — <code>php artisan db:seed --class=AdminUserSeeder</code> — and your default admin is ready.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🗑️</div>
+      <h3>Soft Deletes</h3>
+      <p>Users are never hard-deleted. Restore any account without data loss.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>6 Form Requests</h3>
+      <p>Login, Register, ForcePasswordChange, SendOtp, VerifyOtp, ResetPasswordOtp — all validated.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📦</div>
+      <h3>Drop-in Ready</h3>
+      <p>Copy <code>src/</code> into your app, migrate, seed, register middleware — done. No Composer package needed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CODE -->
+<section id="code" style="padding-top:0">
+  <div class="section-label">Code examples</div>
+  <h2>Simple, <em>readable</em> API</h2>
+  <div class="demo-wrapper">
+    <div class="demo-tabs">
+      <div class="demo-tab active" onclick="showTab('routes')">Route Protection</div>
+      <div class="demo-tab" onclick="showTab('otp')">OTP Reset Flow</div>
+      <div class="demo-tab" onclick="showTab('model')">User Model</div>
+      <div class="demo-tab" onclick="showTab('middleware')">Middleware Setup</div>
+    </div>
+    <div class="demo-panel active" id="tab-routes">
+      <div class="code-block">
+<span class="c-comment">// Admin-only</span>
+<span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">middleware</span><span class="c-op">([</span><span class="c-string">'auth'</span><span class="c-op">,</span> <span class="c-string">'role:admin'</span><span class="c-op">])-></span><span class="c-fn">group</span><span class="c-op">(</span><span class="c-keyword">function </span><span class="c-op">() {</span>
+    <span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">get</span><span class="c-op">(</span><span class="c-string">'/admin/dashboard'</span><span class="c-op">,</span> <span class="c-class">AdminDashboardController</span><span class="c-op">::class);</span>
+    <span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">resource</span><span class="c-op">(</span><span class="c-string">'/admin/users'</span><span class="c-op">,</span> <span class="c-class">UserController</span><span class="c-op">::class);</span>
+<span class="c-op">});</span>
+
+<span class="c-comment">// Staff AND admin</span>
+<span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">middleware</span><span class="c-op">([</span><span class="c-string">'auth'</span><span class="c-op">,</span> <span class="c-string">'role:staff,admin'</span><span class="c-op">])-></span><span class="c-fn">group</span><span class="c-op">(</span><span class="c-keyword">function </span><span class="c-op">() {</span>
+    <span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">get</span><span class="c-op">(</span><span class="c-string">'/staff/tasks'</span><span class="c-op">,</span> <span class="c-class">StaffTaskController</span><span class="c-op">::class);</span>
+<span class="c-op">});</span>
+
+<span class="c-comment">// Client only</span>
+<span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">middleware</span><span class="c-op">([</span><span class="c-string">'auth'</span><span class="c-op">,</span> <span class="c-string">'role:client'</span><span class="c-op">])-></span><span class="c-fn">group</span><span class="c-op">(</span><span class="c-keyword">function </span><span class="c-op">() {</span>
+    <span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">get</span><span class="c-op">(</span><span class="c-string">'/my-requests'</span><span class="c-op">,</span> <span class="c-class">ClientRequestController</span><span class="c-op">::class);</span>
+<span class="c-op">});</span>
+      </div>
+    </div>
+    <div class="demo-panel" id="tab-otp">
+      <div style="margin-bottom:20px">
+        <div class="otp-flow">
+          <div class="otp-step">
+            <div class="otp-num">1</div>
+            <h4>Send OTP</h4>
+            <p>User submits email. 6-digit code sent.</p>
+            <div class="otp-endpoint">POST /send-otp</div>
+          </div>
+          <div class="otp-step">
+            <div class="otp-num">2</div>
+            <h4>Verify OTP</h4>
+            <p>User enters the code from email.</p>
+            <div class="otp-endpoint">POST /verify-otp</div>
+          </div>
+          <div class="otp-step">
+            <div class="otp-num">3</div>
+            <h4>Reset</h4>
+            <p>New password set. Old hash replaced.</p>
+            <div class="otp-endpoint">POST /reset</div>
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+<span class="c-comment">// Register routes</span>
+<span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">post</span><span class="c-op">(</span><span class="c-string">'/forgot-password/send-otp'</span><span class="c-op">,</span>   <span class="c-op">[</span><span class="c-class">PasswordResetOtpController</span><span class="c-op">::class,</span> <span class="c-string">'sendOtp'</span><span class="c-op">]);</span>
+<span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">post</span><span class="c-op">(</span><span class="c-string">'/forgot-password/verify-otp'</span><span class="c-op">,</span> <span class="c-op">[</span><span class="c-class">PasswordResetOtpController</span><span class="c-op">::class,</span> <span class="c-string">'verifyOtp'</span><span class="c-op">]);</span>
+<span class="c-class">Route</span><span class="c-op">::</span><span class="c-fn">post</span><span class="c-op">(</span><span class="c-string">'/forgot-password/reset'</span><span class="c-op">,</span>      <span class="c-op">[</span><span class="c-class">PasswordResetOtpController</span><span class="c-op">::class,</span> <span class="c-string">'reset'</span><span class="c-op">]);</span>
+      </div>
+    </div>
+    <div class="demo-panel" id="tab-model">
+      <div class="code-block">
+<span class="c-comment">// User model attributes</span>
+<span class="c-var">$user</span><span class="c-op">-></span><span class="c-var">account_type</span>          <span class="c-comment">// 'admin' | 'staff' | 'client'</span>
+<span class="c-var">$user</span><span class="c-op">-></span><span class="c-var">status</span>                <span class="c-comment">// 'active' | 'inactive' | 'pending'</span>
+<span class="c-var">$user</span><span class="c-op">-></span><span class="c-var">must_change_password</span>  <span class="c-comment">// bool → triggers force-change</span>
+<span class="c-var">$user</span><span class="c-op">-></span><span class="c-var">last_login_at</span>         <span class="c-comment">// auto-tracked</span>
+<span class="c-var">$user</span><span class="c-op">-></span><span class="c-var">name</span>                  <span class="c-comment">// "Juan dela Cruz" — null-safe</span>
+<span class="c-var">$user</span><span class="c-op">-></span><span class="c-var">staffInfo</span>             <span class="c-comment">// StaffInfo model (staff only)</span>
+
+<span class="c-comment">// Seed default admin</span>
+<span class="c-op">php artisan db:seed --class=</span><span class="c-class">AdminUserSeeder</span>
+<span class="c-comment">// → admin@example.com / Admin@1234</span>
+<span class="c-comment">// → must_change_password = true (auto-redirect)</span>
+      </div>
+    </div>
+    <div class="demo-panel" id="tab-middleware">
+      <div class="code-block">
+<span class="c-comment">// bootstrap/app.php (Laravel 11)</span>
+<span class="c-op">-></span><span class="c-fn">withMiddleware</span><span class="c-op">(</span><span class="c-keyword">function </span><span class="c-op">(</span><span class="c-class">Middleware</span> <span class="c-var">$middleware</span><span class="c-op">) {</span>
+    <span class="c-var">$middleware</span><span class="c-op">-></span><span class="c-fn">alias</span><span class="c-op">([</span>
+        <span class="c-string">'role'</span>           <span class="c-op">=></span> <span class="c-class">\App\Http\Middleware\RoleMiddleware</span><span class="c-op">::class,</span>
+        <span class="c-string">'force.password'</span> <span class="c-op">=></span> <span class="c-class">\App\Http\Middleware\ForcePasswordChange</span><span class="c-op">::class,</span>
+    <span class="c-op">]);</span>
+<span class="c-op">})</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FILES -->
+<section id="files" style="padding-top:0">
+  <div class="section-label">File structure</div>
+  <h2>Clean, <em>organized</em> code</h2>
+  <div class="file-tree">
+    <div><span class="ft-dir">src/</span></div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">Models/</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">User.php</span>&nbsp;&nbsp;<span class="ft-comment">← Extended user model, soft deletes, name accessor</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">StaffInfo.php</span>&nbsp;&nbsp;<span class="ft-comment">← Employee profile fields</span></div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">Http/Controllers/Auth/</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">AuthenticatedSessionController.php</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">RegisteredUserController.php</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">PasswordResetOtpController.php</span>&nbsp;&nbsp;<span class="ft-comment">← OTP flow</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">ForcePasswordChangeController.php</span></div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">Http/Middleware/</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">RoleMiddleware.php</span>&nbsp;&nbsp;<span class="ft-comment">← role:admin, role:staff,admin</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">ForcePasswordChange.php</span>&nbsp;&nbsp;<span class="ft-comment">← loop-safe redirect</span></div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">Http/Requests/Auth/</span>&nbsp;&nbsp;<span class="ft-comment">← 6 validated request classes</span></div>
+    <div>&nbsp;&nbsp;<span class="ft-dir">database/</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">migrations/create_users_table.php</span>&nbsp;&nbsp;<span class="ft-comment">← users + staff_infos</span></div>
+    <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ft-file">AdminUserSeeder.php</span>&nbsp;&nbsp;<span class="ft-comment">← default admin account</span></div>
+    <div><span class="ft-file">README.md</span>&nbsp;&nbsp;<span class="ft-comment">← full setup guide</span></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-label">Get the starter kit</div>
+  <h2>Stop rebuilding auth. <em>Ship faster.</em></h2>
+  <p style="color:var(--muted);margin-bottom:8px">One-time purchase. Use in unlimited projects with Extended License.</p>
+  <div class="price-tag"><sup>$</sup>24<sub>/one-time</sub></div>
+  <br>
+  <a href="https://www.codester.com" class="btn-primary" target="_blank" style="font-size:1rem;padding:16px 36px">
+    Buy on Codester →
+  </a>
+</section>
+
+<footer>
+  <span>Laravel Multi-Role Auth Starter Kit</span>
+  <span>PHP 8.1+ · Laravel 10 & 11 · Extended License available</span>
+</footer>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.demo-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.demo-panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+function switchRole(role) {
+  const colors={admin:'active-admin',staff:'active-staff',client:'active-client'};
+  const navItems=document.querySelectorAll('.db-nav-item');
+  navItems.forEach((el,i)=>{
+    const roles=['admin','staff','client'];
+    el.className='db-nav-item';
+    if(roles[i]===role) el.classList.add(colors[role]);
+    else el.style.color='var(--muted)';
+  });
+  document.querySelectorAll('.db-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+role).classList.add('active');
+  const urls={admin:'/admin/dashboard',staff:'/staff/tasks',client:'/my-requests'};
+  document.querySelector('.db-url').textContent='https://yourapp.com'+urls[role];
+}
+</script>
+</body>
+</html>
